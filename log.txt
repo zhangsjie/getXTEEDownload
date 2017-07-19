@@ -1,0 +1,45 @@
+2017-07-09 00:36:14,075 INFO loading config file
+2017-07-09 00:36:14,582 INFO found 3 regions
+2017-07-09 00:36:14,583 INFO Americas
+2017-07-09 00:36:16,115 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:36:14&region=Americas&serialnumber=USE723CEN9
+2017-07-09 00:36:18,571 ERROR error at jsonCall: GET https://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:36:14&region=Americas&serialnumber=USE723CEN9 returned a response status of 404 Not Found[Ljava.lang.StackTraceElement;@34129c78
+2017-07-09 00:36:18,572 INFO Asia%20Pacific
+2017-07-09 00:36:18,679 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:36:18&region=Asia%20Pacific&serialnumber=USE723CEN9
+2017-07-09 00:36:21,880 ERROR error at jsonCall: GET https://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:36:18&region=Asia%20Pacific&serialnumber=USE723CEN9 returned a response status of 404 Not Found[Ljava.lang.StackTraceElement;@1890516e
+2017-07-09 00:36:21,881 INFO EMEA
+2017-07-09 00:36:21,953 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:36:21&region=EMEA&serialnumber=USE723CEN9
+2017-07-09 00:36:23,372 ERROR error at jsonCall: GET https://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:36:21&region=EMEA&serialnumber=USE723CEN9 returned a response status of 404 Not Found[Ljava.lang.StackTraceElement;@2fba3fc4
+2017-07-09 00:36:23,372 INFO fileCounter: 0
+2017-07-09 00:37:40,615 INFO loading config file
+2017-07-09 00:37:40,640 INFO found 3 regions
+2017-07-09 00:37:40,640 INFO Americas
+2017-07-09 00:37:42,038 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:37:40&region=Americas&serialnumber=CZ272002YJ
+2017-07-09 00:37:44,338 INFO C:\\apiClient\\XTEE\\output\\IIPGSITIWS.XteeAmericas_TXT_EVENT_Jul_9_2017_0H_37m_44s.csv
+2017-07-09 00:37:44,357 INFO File written successfully for: Americas
+2017-07-09 00:37:44,357 INFO Asia%20Pacific
+2017-07-09 00:37:44,554 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:37:44&region=Asia%20Pacific&serialnumber=CZ272002YJ
+2017-07-09 00:37:46,205 INFO C:\\apiClient\\XTEE\\output\\IIPGSITIWS.XteeAsiaPacific_TXT_EVENT_Jul_9_2017_0H_37m_46s.csv
+2017-07-09 00:37:46,217 INFO File written successfully for: Asia%20Pacific
+2017-07-09 00:37:46,218 INFO EMEA
+2017-07-09 00:37:46,293 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-09%2000:37:46&region=EMEA&serialnumber=CZ272002YJ
+2017-07-09 00:37:47,844 INFO C:\\apiClient\\XTEE\\output\\IIPGSITIWS.XteeEMEA_TXT_EVENT_Jul_9_2017_0H_37m_47s.csv
+2017-07-09 00:37:47,860 INFO File written successfully for: EMEA
+2017-07-09 00:37:47,860 INFO fileCounter: 3
+2017-07-12 17:47:58,873 INFO loading config file
+2017-07-12 17:47:59,224 INFO found 3 regions
+2017-07-12 17:47:59,225 INFO Americas
+2017-07-12 17:48:00,900 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-12%2017:47:59&region=Americas&serialnumber=2M271401DL
+2017-07-12 17:48:06,566 INFO C:\\apiClient\\XTEE\\output\\IIPGSITIWS.XteeAmericas_TXT_EVENT_Jul_12_2017_17H_48m_6s.csv
+2017-07-12 17:48:06,586 INFO File written successfully for: Americas
+2017-07-12 17:48:06,586 INFO Asia%20Pacific
+2017-07-12 17:48:06,689 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-12%2017:48:06&region=Asia%20Pacific&serialnumber=2M271401DL
+2017-07-12 17:48:08,133 INFO C:\\apiClient\\XTEE\\output\\IIPGSITIWS.XteeAsiaPacific_TXT_EVENT_Jul_12_2017_17H_48m_8s.csv
+2017-07-12 17:48:08,143 INFO File written successfully for: Asia%20Pacific
+2017-07-12 17:48:08,143 INFO EMEA
+2017-07-12 17:48:08,234 INFO sending URL requesthttps://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-06-20%2002:34:18&to=2017-07-12%2017:48:08&region=EMEA&serialnumber=2M271401DL
+2017-07-12 17:48:09,508 INFO C:\\apiClient\\XTEE\\output\\IIPGSITIWS.XteeEMEA_TXT_EVENT_Jul_12_2017_17H_48m_9s.csv
+2017-07-12 17:48:09,528 INFO File written successfully for: EMEA
+2017-07-12 17:48:09,529 INFO fileCounter: 3
+2017-07-18 20:08:05,054 INFO loading config file
+2017-07-18 20:08:05,081 ERROR .\config.properties (系统找不到指定的文件。)can not loading config file
+2017-07-18 20:08:40,309 INFO loading config file
