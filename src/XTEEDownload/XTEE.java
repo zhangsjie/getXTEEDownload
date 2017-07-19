@@ -52,12 +52,8 @@ public class XTEE {
 		String JsonURL = "";
 		String[] regions = prop.getProperty("regions").split(",");
 
-		for (String s : regions) {
-			String sa = s.replace("%20", "");
-			SNListMap.put(sa, "");
-		}
+		
 
-		// LOGGER.log(Level.INFO, SNListMap.toString());
 		int fileCounter = 0;
 		LOGGER.log(Level.INFO, "found " + regions.length + " regions");
 		for (String region : regions) {
