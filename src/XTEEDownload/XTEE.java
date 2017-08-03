@@ -29,7 +29,10 @@ import XTEEDownload.Util;;
 public class XTEE {
 	private static final Logger LOGGER = LogManager.getLogger(XTEE.class);
 	private static Properties prop;
-	private static HashMap<String, String> SNListMap = new HashMap<String, String>();
+	private static List<String> SNNotFound = new ArrayList<String>();
+	private static HashMap<String, String> SNmap = new HashMap<String, String>();
+	private static HashMap<String, String> SNmapFound = new HashMap<String, String>();
+	private static HashMap<String, String> SNmapNotFound = new HashMap<String, String>();
 
 	public static void main(String[] args) {
 
@@ -50,21 +53,21 @@ public class XTEE {
 		}
 
 		String JsonURL = "";
-		String[] regions = prop.getProperty("regions").split(",");
-
-		
+		ArrayList<String> regions = new ArrayList<String>(Arrays.asList(prop.getProperty("regions").split(",")));
 
 		int fileCounter = 0;
-		LOGGER.log(Level.INFO, "found " + regions.length + " regions");
+		if (buildSerialNumberList() != null) {
+			regions.remove(0);
+			regions.remove(0);
+		}
 		for (String region : regions) {
-			LOGGER.log(Level.INFO, region);
+			LOGGER.log(Level.INFO, "Start processing : " + region);
 			JsonURL = buildUrl(region);
 
 			try {
 				fileCounter += jsonCall(JsonURL, "event", prop.getProperty("tempLocation"),
 						prop.getProperty("outputLocation"), region);
 			} catch (Exception e) {
-				SNListMap.put(region.replace("%20", ""), "All SN cannot be found in this region");
 				LOGGER.log(Level.ERROR, "error at jsonCall: " + e.getMessage() + e.getStackTrace());
 				// LOGGER.log(Level.ALL, e.getStackTrace());
 			}
@@ -88,7 +91,11 @@ public class XTEE {
 		}
 		if (JsonURL.indexOf("serialnumber") != -1) {
 			// send email
-			snedEmailToUser(buildSerialNumberUrl());
+			if (fileCounter == 0) {
+				SNNotFound = new ArrayList<String>(Arrays.asList(buildSerialNumberList().split(",")));
+
+			}
+			sendEmailToUser(buildSerialNumberList());
 			LOGGER.log(Level.INFO, "sendEmail done");
 		}
 		// System.exit(0);
@@ -98,29 +105,49 @@ public class XTEE {
 	 * send emil to user who use this jar
 	 * 
 	 * @author zhangshe
-	 * @param SNListMap
 	 * @param serialNumber
 	 */
-	private static void snedEmailToUser(String serialNumber) {
-		String fromEmail=prop.getProperty("fromEmail");
-		String subject = "The serialnumber's analysis for the records of Xtee";
+	private static void sendEmailToUser(String serialNumber) {
+		String fromEmail = prop.getProperty("fromEmail");
+		String subject = "The serial number's analysis for the records of Xtee";
 		String toList = prop.getProperty("toEmail");
-		String ccList = "";
+		String ccList = prop.getProperty("ccEmail");
+
 		String body = "";
-		String line0 = "The SN of your query are " + serialNumber + "<br />";
-		StringBuilder line = new StringBuilder(" ");
-		for (String key : SNListMap.keySet()) {
-			String value = SNListMap.get(key);
-			line.append(key);
-			line.append(":");
-			line.append(value);
-			line.append("<br />");
+		String line0 = "The following serial numbers are all of you want to query:<br />----" + serialNumber + "<br />";
+		String line1 = "XTEE Recon Process has completed download of following serial numbers:<br />";
+		String line3 = "The following serial numbers were not found in XTEE API:<br />";
+		StringBuilder line2 = new StringBuilder("----");
+		StringBuilder line4 = new StringBuilder("----");
+		List<String> SNList = new ArrayList<String>(Arrays.asList(serialNumber.split(",")));
+
+		for (String record : SNNotFound) {
+			Iterator<String> it = SNList.iterator();
+			while (it.hasNext()) {
+				String sn = it.next();
+				if (record.indexOf(sn) != -1) {
+					it.remove();
+				}
+			}
 		}
-		body = line0 + line.toString();
+
+		for (String s : SNList) {
+			line2.append(s + ",");
+		}
+		line2.deleteCharAt(line2.length() - 1);
+		line2.append("<br />");
+
+		for (String s : SNNotFound) {
+			line4.append(s + ",");
+		}
+		line4.deleteCharAt(line4.length() - 1);
+		line4.append("<br />");
+
+		body = line0 + line1 + Util.listMap(SNmapFound) + line3 +  Util.listMap(SNmapFound);
 		try {
 
-			Util.SendEMail(subject,toList, ccList, body, fromEmail);
-			LOGGER.log(Level.INFO, "serialNumber: " + serialNumber);
+			Util.SendEMail(subject, toList, ccList, body, fromEmail);
+			LOGGER.log(Level.INFO, "serialNumberlist: " + SNmap.toString());
 		} catch (ClassNotFoundException e) {
 			LOGGER.log(Level.ERROR, "ClassNotFoundException" + e.getMessage());
 		} catch (IOException e) {
@@ -128,13 +155,54 @@ public class XTEE {
 		} catch (Exception e) {
 			LOGGER.log(Level.ERROR, "error on sendEmail" + e.getMessage());
 		}
+		changeNameForSerialNumberFile();
+
+	}
+
+	private static void changeNameForSerialNumberFile() {
+		// 我要获取当前的日期
+		Date date = new Date();
+		// 设置要获取到什么样的时间
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HH-mm-ss");
+		// 获取String类型的时间
+		String createdate = sdf.format(date);
+		String srcFileName = prop.getProperty("SerialNumberFile") + "serialNumberFile.txt";
+		String destFileName = prop.getProperty("SerialNumberFile") + createdate + "_serialnumberFile.txt";
+		Util.copyFile(srcFileName, destFileName, true);
+
 	}
 
 	private static int writeXTEEDataToFile(String jsonURL, String folder, List<String> myList, String inputFolder,
 			String fileType, String region, Date start) throws IOException, JSONException {
 		if (jsonURL.indexOf("serialnumber") != -1) {
-			getSerialNumberInfo(buildSerialNumberUrl(), myList);
+			getSerialNumberInfo(buildSerialNumberList(), myList);
+
+			Iterator<String> it = myList.iterator();
+			while (it.hasNext()) {
+				String x = it.next();
+				for (String key : SNmap.keySet()) {
+					ArrayList<String> reference = new ArrayList<String>(Arrays.asList(SNmap.get(key).split(",")));
+					if (reference == null || reference.size() == 0) {
+						continue;
+					}
+					boolean ishaverefence = false;
+					for (String s : reference) {
+						if (x.indexOf(s) != -1) {
+							ishaverefence = true;
+						}
+					}
+					if (!ishaverefence) {
+						it.remove();
+					}
+				}
+
+			}
+
 		}
+		/*
+		 * if (region == "EMEA"){ LOGGER.log(Level.INFO,
+		 * "1111111111111111111111111111"); }
+		 */
 		String headers = jsonURL.split("fields=")[1];
 		String[] headerArray = headers.split(",");
 
@@ -165,6 +233,7 @@ public class XTEE {
 
 		bw.write(headers + "\n");
 		for (String str : myList) {
+
 			String FILE_NAME = str.substring(str.indexOf("FILE_NAME") + 12, str.indexOf("FILE_CREATE_DT") - 3);
 			String FILE_CREATE_DT = str.substring(str.indexOf("FILE_CREATE_DT") + 17, str.indexOf("FILE_INFO") - 3);
 			String sublist = str.substring(str.indexOf("ACTIONCODE"), str.indexOf("Links") - 3);
@@ -174,6 +243,7 @@ public class XTEE {
 			for (String head : headerArray) {
 				map.put(head, "");
 			}
+
 			for (String split : splitList) {
 				int a = split.indexOf(":");
 				int b = split.indexOf(":", a + 1);
@@ -189,6 +259,7 @@ public class XTEE {
 				}
 
 			}
+
 			// 加入RECV_DATE和FILE_NAME
 			for (String key : map.keySet()) {
 				if (key.equals("FILE_NAME")) {
@@ -210,7 +281,7 @@ public class XTEE {
 
 		}
 		bw.close();
-		LOGGER.log(Level.INFO, pathName);
+		LOGGER.log(Level.INFO, pathName.toString());
 		File destinationFile = new File(pathName.toString());
 		try {
 			// LOGGER.log(Level.INFO, "File written Begin for: " + region);
@@ -228,56 +299,50 @@ public class XTEE {
 	}
 
 	/**
-	 * 方法作用:记录每个region的记录中所包含的serialnumber的值.
+	 * 方法作用:记录serialnumber NotFound.
 	 * 
 	 * @author zhangshe
 	 * 
-	 * @param jsonURL
+	 * @param serialNumber
 	 * @param myList
-	 * @param region
 	 */
-	private static void getSerialNumberInfo(String jsonURL, List<String> myList, String region) {
-		List<String> SNList = new ArrayList<String>(Arrays.asList(buildSerialNumberUrl().split(",")));
-		for (String record : myList) {
-			Iterator<String> it = SNList.iterator();
-			while (it.hasNext()) {
-				String sn = it.next();
-				if (record.indexOf(sn) != -1) {
-					it.remove();
-				}
-			}
-		}
-		String re=region.replace("%20", "");
-		if (SNList.isEmpty()) {
-			SNListMap.put(re, "All of the SN were found in the records");
-		} else {
-			for (String sn : SNList) {
-				SNListMap.put(re, SNListMap.get(re) + sn + ",");
-			}
-			String value=SNListMap.get(re);
-			SNListMap.put(re,"These SN cannot be found in the records : " + value.substring(0, value.length()-1));
-		}
-	}
-	public static void getSerialNumberInfo(String serialNumber, List<String> myList){
+	public static void getSerialNumberInfo(String serialNumber, List<String> myList) {
 		List<String> SNList = new ArrayList<String>(Arrays.asList(serialNumber.split(",")));
-		
+
 		for (String record : myList) {
 			Iterator<String> it = SNList.iterator();
 			while (it.hasNext()) {
 				String sn = it.next();
 				if (record.indexOf(sn) != -1) {
+					String reference = SNmap.get(sn);
+					if (reference == null || reference == "") {
+						SNmapFound.put(sn, "");
+					} else {
+						List<String> referenceSplit = new ArrayList<String>(Arrays.asList(reference.split(",")));
+						for (String refer : referenceSplit) {
+							if (record.indexOf(refer) != -1) {
+								Util.addValue(SNmapFound, sn, refer);
+							} else {
+								Util.addValue(SNmapNotFound, sn, refer);
+							}
+						}
+
+					}
 					it.remove();
+				} else {
+					SNmapNotFound.put(sn, SNmap.get(sn));
 				}
 			}
 		}
+		SNNotFound = SNList;
 	}
+
 	public static int jsonCall(String jsonURL, String fileType, String folder, String inputFolder, String region)
 			throws IOException, JSONException {
 		int success = 0;
 		SSLContext sslcontext = null;
 		try {
 			try {
-
 				sslcontext = getSSLContext();
 			} catch (KeyManagementException e) {
 				LOGGER.log(Level.ERROR, "error creating sslcontext" + e.getMessage());
@@ -306,7 +371,7 @@ public class XTEE {
 		recivedData = service.get(String.class);
 		recivedData = recivedData.substring(1, recivedData.length() - 1);
 
-		List<String> myList = new ArrayList<String>(Arrays.asList(Util.replaceFileds(recivedData).split("\\},\\{")));
+		List<String> myList = new ArrayList<String>(Arrays.asList(Util.replaceFileds(recivedData).split("\\},\\{\"")));
 
 		success = writeXTEEDataToFile(jsonURL, folder, myList, inputFolder, fileType, region, start);
 
@@ -345,7 +410,7 @@ public class XTEE {
 			dateReader = new BufferedReader(new FileReader(dateFile));
 			String date = dateReader.readLine();
 			dateReader.close();
-			String serialNumber = buildSerialNumberUrl();
+			String serialNumber = buildSerialNumberList();
 			if (date.length() > 0) {
 				Calendar cal = Calendar.getInstance();
 				Date from = format.parse(date);
@@ -357,8 +422,8 @@ public class XTEE {
 				// "2016-11-23&to=2016-11-30&region=EMEA" + "&" +
 				// https://dss-iis01.americas.hpqcorp.net/api/dsr/xteencffile?from=2017-05-06&to=2017-05-30&region=Americas
 				if (serialNumber != null) {
-					tempURL = prop.getProperty("URL") + date + "&to=" + format.format(new Date()).replace(" ", "%20")
-							+ "&region=" + region + "&serialnumber=" + serialNumber + "&" + prop.getProperty("fields");
+					tempURL = prop.getProperty("SNURL") + "serialnumber=" + serialNumber + "&"
+							+ prop.getProperty("fields");
 				} else {
 					tempURL = prop.getProperty("URL") + date + "&to=" + format.format(new Date()).replace(" ", "%20")
 							+ "&region=" + region + "&" + prop.getProperty("fields");
@@ -376,20 +441,26 @@ public class XTEE {
 	 * 
 	 * @return
 	 */
-	public static String buildSerialNumberUrl() {
+	public static String buildSerialNumberList() {
 		String serialNumber = null;
 		BufferedReader SerialNumberReader = null;
+		String line = null;
+		StringBuilder sb = new StringBuilder("");
 		try {
-			String lineTxt = null;
-			StringBuilder sb = new StringBuilder("");
 
-			File SerialNumberFile = new File(prop.getProperty("SerialNumberFile"));
-			if (SerialNumberFile.exists() && SerialNumberFile.length() == 0) {
+			File SerialNumberFile = new File(prop.getProperty("SerialNumberFile") + "serialNumberFile.txt");
+			if (!SerialNumberFile.exists() || SerialNumberFile.length() == 0) {
 				return null;
 			}
 			SerialNumberReader = new BufferedReader(new FileReader(SerialNumberFile));
-			while ((lineTxt = SerialNumberReader.readLine()) != null) {
-				sb.append(lineTxt + ",");
+			while ((line = SerialNumberReader.readLine()) != null) {
+				String line0 = line.split(" ")[0];
+				if (line0.length() == 0) {
+					continue;
+				}
+				String line1 = line.split(" ").length == 1 ? " " : line.split(" ")[1];
+				SNmap.put(line0, line1);
+				sb.append(line0 + ",");
 			}
 			String sn = sb.toString().trim();
 			serialNumber = sn.substring(0, sn.length() - 1);

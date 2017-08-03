@@ -1,12 +1,20 @@
 package XTEEDownload;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.mail.Message;
@@ -21,8 +29,10 @@ import javax.mail.internet.MimeMultipart;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import javax.swing.JOptionPane;
 
 public class Util {
+	private static String MESSAGE = "";
 
 	public static Boolean WriteToDB(String query) throws NamingException, SQLException {
 		InitialContext ic = new InitialContext();
@@ -41,7 +51,7 @@ public class Util {
 	public static void SendEMail(String subject, String toList, String ccList, String body, String from)
 			throws IOException, SQLException, ClassNotFoundException {
 
-		//String from = "ffaapi.dev@hpe.com";
+		// String from = "ffaapi.dev@hpe.com";
 		Properties properties = System.getProperties();
 		properties.setProperty("mail.smtp.host", "smtp3.hp.com");
 		properties.setProperty("mail.smtp.sendpartial", "true");
@@ -53,9 +63,9 @@ public class Util {
 
 			message.setFrom(new InternetAddress(from));
 			message.setRecipients(Message.RecipientType.TO, toList);
-			// if(ccList != "")
-			// message.setRecipients(Message.RecipientType.CC, ccList);
-
+			if (ccList != "" && ccList != null) {
+				message.setRecipients(Message.RecipientType.CC, ccList);
+			}
 			message.setSubject(subject);
 			MimeBodyPart bodyPart = new MimeBodyPart();
 			bodyPart.setContent(GetHTMLBody(body), "text/html");
@@ -92,6 +102,27 @@ public class Util {
 			return "";
 		}
 	}
+	
+	public static String listMap(Map<String, String> map){
+		StringBuilder sb=new StringBuilder();
+		for (Entry<String, String> entry : map.entrySet()) {
+			sb.append(entry.getKey()+" : ");
+			sb.append(entry.getValue()+", ");
+			sb.append("<br />");
+		}
+		String str=sb.toString();
+		return str;
+		
+	}
+
+	public static HashMap<String, String> addValue(HashMap<String, String> map, String key, String value) {
+		if (map.containsKey(key)) {
+			map.put(key, map.get(key)+value);
+		}else{
+			map.put(key, value);
+		}
+		return map;
+	}
 
 	public static String replaceFileds(String recivedData) {
 		recivedData = recivedData.replace("MQD_LOCATION", "MANUFACTURING_OPERATION_NAME");
@@ -125,4 +156,66 @@ public class Util {
 		return recivedData;
 	}
 
+	public static boolean copyFile(String srcFileName, String destFileName, boolean overlay) {
+		File srcFile = new File(srcFileName);
+
+		// 判断源文件是否存在
+		if (!srcFile.exists()) {
+			MESSAGE = "源文件：" + srcFileName + "不存在！";
+			JOptionPane.showMessageDialog(null, MESSAGE);
+			return false;
+		} else if (!srcFile.isFile()) {
+			MESSAGE = "复制文件失败，源文件：" + srcFileName + "不是一个文件！";
+			JOptionPane.showMessageDialog(null, MESSAGE);
+			return false;
+		}
+
+		// 判断目标文件是否存在
+		File destFile = new File(destFileName);
+		if (destFile.exists()) {
+			// 如果目标文件存在并允许覆盖
+			if (overlay) {
+				// 删除已经存在的目标文件，无论目标文件是目录还是单个文件
+				new File(destFileName).delete();
+			}
+		} else {
+			// 如果目标文件所在目录不存在，则创建目录
+			if (!destFile.getParentFile().exists()) {
+				// 目标文件所在目录不存在
+				if (!destFile.getParentFile().mkdirs()) {
+					// 复制文件失败：创建目标文件所在目录失败
+					return false;
+				}
+			}
+		}
+
+		// 复制文件
+		int byteread = 0; // 读取的字节数
+		InputStream in = null;
+		OutputStream out = null;
+
+		try {
+			in = new FileInputStream(srcFile);
+			out = new FileOutputStream(destFile);
+			byte[] buffer = new byte[1024];
+
+			while ((byteread = in.read(buffer)) != -1) {
+				out.write(buffer, 0, byteread);
+			}
+			return true;
+		} catch (FileNotFoundException e) {
+			return false;
+		} catch (IOException e) {
+			return false;
+		} finally {
+			try {
+				if (out != null)
+					out.close();
+				if (in != null)
+					in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
