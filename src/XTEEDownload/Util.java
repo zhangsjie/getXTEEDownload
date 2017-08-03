@@ -239,6 +239,7 @@ public class Util {
 			} else {
 				List<String> values0 = new ArrayList<String>(Arrays.asList(map0.get(key0).split(",")));
 				List<String> values1 = new ArrayList<String>(Arrays.asList(map1.get(key0).split(",")));
+				
 				if (map0.get(key0) == null || values1.size() == 0) {
 					map2.put(key0, map0.get(key0) == null ? "" : map0.get(key0));
 				} else {
