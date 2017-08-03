@@ -12,7 +12,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -30,6 +33,8 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import javax.swing.JOptionPane;
+
+import org.omg.CORBA.PUBLIC_MEMBER;
 
 public class Util {
 	private static String MESSAGE = "";
@@ -102,24 +107,24 @@ public class Util {
 			return "";
 		}
 	}
-	
-	public static String listMap(Map<String, String> map){
-		StringBuilder sb=new StringBuilder();
+
+	public static String listMap(Map<String, String> map) {
+		StringBuilder sb = new StringBuilder();
 		for (Entry<String, String> entry : map.entrySet()) {
-			sb.append(entry.getKey()+" : ");
-			sb.append(entry.getValue()+", ");
+			sb.append(entry.getKey() + " : ");
+			sb.append(entry.getValue() + ", ");
 			sb.append("<br />");
 		}
-		String str=sb.toString();
+		String str = sb.toString();
 		return str;
-		
+
 	}
 
 	public static HashMap<String, String> addValue(HashMap<String, String> map, String key, String value) {
 		if (map.containsKey(key)) {
-			map.put(key, map.get(key)+value);
-		}else{
-			map.put(key, value);
+			map.put(key, map.get(key) + value);
+		} else {
+			map.put(key, value + ",");
 		}
 		return map;
 	}
@@ -217,5 +222,37 @@ public class Util {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public static HashMap<String, String> filterMap(HashMap<String, String> map0, HashMap<String, String> map1) {
+		HashMap<String, String> map2 = new HashMap<String, String>();
+		for (String key0 : map0.keySet()) {
+			boolean ishavekey = false;
+
+			for (String key1 : map1.keySet()) {
+				if (key0 == key1) {
+					ishavekey = true;
+				}
+			}
+			if (ishavekey) {
+				map2.put(key0, map0.get(key0) == null ? "" : map0.get(key0));
+			} else {
+				List<String> values0 = new ArrayList<String>(Arrays.asList(map0.get(key0).split(",")));
+				List<String> values1 = new ArrayList<String>(Arrays.asList(map1.get(key0).split(",")));
+				if (map0.get(key0) == null || values1.size() == 0) {
+					map2.put(key0, map0.get(key0) == null ? "" : map0.get(key0));
+				} else {
+					for (String value : values0) {
+						if (map1.get(key0).indexOf(value) == -1) {
+							addValue(map2, key0, value);
+						}
+					}
+				}
+
+			}
+		}
+
+		return map2;
+
 	}
 }

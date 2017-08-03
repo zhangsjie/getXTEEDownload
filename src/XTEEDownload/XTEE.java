@@ -92,8 +92,7 @@ public class XTEE {
 		if (JsonURL.indexOf("serialnumber") != -1) {
 			// send email
 			if (fileCounter == 0) {
-				SNNotFound = new ArrayList<String>(Arrays.asList(buildSerialNumberList().split(",")));
-
+				SNmapNotFound=SNmap;
 			}
 			sendEmailToUser(buildSerialNumberList());
 			LOGGER.log(Level.INFO, "sendEmail done");
@@ -143,7 +142,7 @@ public class XTEE {
 		line4.deleteCharAt(line4.length() - 1);
 		line4.append("<br />");
 
-		body = line0 + line1 + Util.listMap(SNmapFound) + line3 +  Util.listMap(SNmapFound);
+		body = line0 + line1 + Util.listMap(SNmapFound) + line3 + Util.listMap(SNmapNotFound);
 		try {
 
 			Util.SendEMail(subject, toList, ccList, body, fromEmail);
@@ -306,35 +305,52 @@ public class XTEE {
 	 * @param serialNumber
 	 * @param myList
 	 */
+	/**
+	 * @param serialNumber
+	 * @param myList
+	 */
 	public static void getSerialNumberInfo(String serialNumber, List<String> myList) {
-		List<String> SNList = new ArrayList<String>(Arrays.asList(serialNumber.split(",")));
+		//List<String> SNList = new ArrayList<String>(Arrays.asList(serialNumber.split(",")));
 
-		for (String record : myList) {
-			Iterator<String> it = SNList.iterator();
-			while (it.hasNext()) {
-				String sn = it.next();
+		/*
+		 * for (String record : myList) { Iterator<String> it =
+		 * SNList.iterator(); while (it.hasNext()) { String sn = it.next(); if
+		 * (record.indexOf(sn) != -1) { String reference = SNmap.get(sn); if
+		 * (reference == null || reference == "") { SNmapFound.put(sn, ""); }
+		 * else { List<String> referenceSplit = new
+		 * ArrayList<String>(Arrays.asList(reference.split(","))); for (String
+		 * refer : referenceSplit) { if (record.indexOf(refer) != -1) {
+		 * Util.addValue(SNmapFound, sn, refer); } else {
+		 * Util.addValue(SNmapNotFound, sn, refer); } }
+		 * 
+		 * } it.remove(); } else { SNmapNotFound.put(sn, SNmap.get(sn)); } } }
+		 */
+		for (String sn : SNmap.keySet()) {
+			boolean ishaveSN = false;
+			for (String record : myList) {
 				if (record.indexOf(sn) != -1) {
+					ishaveSN = true;
 					String reference = SNmap.get(sn);
 					if (reference == null || reference == "") {
 						SNmapFound.put(sn, "");
 					} else {
 						List<String> referenceSplit = new ArrayList<String>(Arrays.asList(reference.split(",")));
+						// boolean ishaverefer = false;
 						for (String refer : referenceSplit) {
 							if (record.indexOf(refer) != -1) {
+								// ishaverefer = true;
 								Util.addValue(SNmapFound, sn, refer);
-							} else {
-								Util.addValue(SNmapNotFound, sn, refer);
 							}
+
 						}
 
 					}
-					it.remove();
-				} else {
-					SNmapNotFound.put(sn, SNmap.get(sn));
 				}
 			}
+			
 		}
-		SNNotFound = SNList;
+		SNmapNotFound = Util.filterMap(SNmap, SNmapFound);
+		//SNNotFound = SNList;
 	}
 
 	public static int jsonCall(String jsonURL, String fileType, String folder, String inputFolder, String region)
