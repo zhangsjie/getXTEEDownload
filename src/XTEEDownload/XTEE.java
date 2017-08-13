@@ -174,7 +174,7 @@ public class XTEE {
 
 	private static int writeXTEEDataToFile(String jsonURL, String folder, List<String> myList, String inputFolder,
 			String fileType, String region, Date start) throws IOException, JSONException {
-		//HashMap<String, String> MQDMap = new HashMap<String, String>();
+		// HashMap<String, String> MQDMap = new HashMap<String, String>();
 		if (jsonURL.indexOf("serialnumber") != -1) {
 			getSerialNumberInfo(buildSerialNumberList(), myList);
 			Iterator<String> it = myList.iterator();
@@ -199,10 +199,10 @@ public class XTEE {
 			}
 
 		}
-		if (jsonURL.indexOf("serialnumber") == -1) {
-			myList = validationMQDSites(myList);
-
-		}
+		/*
+		 * if (jsonURL.indexOf("serialnumber") == -1) { myList =
+		 * validationMQDSites(myList); }
+		 */
 		/*
 		 * if (region == "EMEA"){ LOGGER.log(Level.INFO,
 		 * "1111111111111111111111111111"); }
@@ -276,6 +276,22 @@ public class XTEE {
 					map.put(key, "FFA_API_XTEE");
 				}
 			}
+			if (jsonURL.indexOf("serialnumber") == -1) {
+				// FIXME
+				String site = "guide2_" + map.get("SITE") + ",";
+				List<String> MQDList = validationMQDSites();
+				boolean YorN = true;
+				for (String s : MQDList) {
+					if (s.startsWith(site) && s.endsWith("N")) {
+						YorN = false;
+					}
+				}
+				if (!YorN) {
+					continue;
+				}
+				// myList = validationMQDSites(myList);
+			}
+
 			// LOGGER.log(Level.INFO, "map:" + map.toString());
 			for (String key : map.keySet()) {
 				// LOGGER.log(Level.INFO, value);
@@ -478,12 +494,13 @@ public class XTEE {
 		return serialNumber;
 	}
 
-	public static List<String> validationMQDSites(List<String> myList) {
+	public static List<String> validationMQDSites() {
+		// FIXME
 		List<String> dataList = new ArrayList<>();
 		List<String> MQDList = new ArrayList<>();
 		BufferedReader MQDFileReader = null;
 		String line = null;
-		
+
 		try {
 
 			prop.getProperty("MQDFileLocation");
@@ -493,29 +510,22 @@ public class XTEE {
 				MQDList.add(line);
 			}
 			MQDFileReader.close();
-			Iterator<String> it = myList.iterator();
-			while(it.hasNext()) {
-				String record=it.next();
-				int a=record.indexOf("site");
-				int b=record.indexOf("&", a+1);
-				String site="guide2_"+record.substring(a+5, b);
-				boolean YorN=true;
-				for(String s:MQDList){
-					if(s.startsWith(s)&&s.endsWith("N")){
-						YorN=false;
-					}
-				}
-				if (!YorN){
-					it.remove();
-				}
-			}
-			
-		dataList=myList;	
+			// Iterator<String> it = myList.iterator();
+			/*
+			 * while (it.hasNext()) { String record = it.next(); int a =
+			 * record.indexOf("site:0:"); int b = record.indexOf("\n", a + 1);
+			 * String site = "guide2_" + record.substring(a + 7, b) + ",";
+			 * LOGGER.log(Level.INFO, "site" + site); boolean YorN = true; for
+			 * (String s : MQDList) { if (s.startsWith(site) && s.endsWith("N"))
+			 * { YorN = false; } } if (!YorN) { it.remove(); } }
+			 * 
+			 * dataList = myList;
+			 */
 		} catch (IOException e) {
 			LOGGER.log(Level.ERROR, "Error validationMQDSites" + e.getMessage());
 		}
 
-		return dataList;
+		return MQDList;
 
 	}
 }
