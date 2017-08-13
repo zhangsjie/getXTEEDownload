@@ -34,10 +34,12 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 import javax.swing.JOptionPane;
 
+import org.apache.http.impl.cookie.PublicSuffixFilter;
 import org.omg.CORBA.PUBLIC_MEMBER;
 
 public class Util {
 	private static String MESSAGE = "";
+	//private static Properties prop;
 
 	public static Boolean WriteToDB(String query) throws NamingException, SQLException {
 		InitialContext ic = new InitialContext();
@@ -239,7 +241,7 @@ public class Util {
 			} else {
 				List<String> values0 = new ArrayList<String>(Arrays.asList(map0.get(key0).split(",")));
 				List<String> values1 = new ArrayList<String>(Arrays.asList(map1.get(key0).split(",")));
-				
+
 				if (map0.get(key0) == null || values1.size() == 0) {
 					map2.put(key0, map0.get(key0) == null ? "" : map0.get(key0));
 				} else {
@@ -252,8 +254,8 @@ public class Util {
 
 			}
 		}
-
 		return map2;
-
 	}
+	
+	//按行读取文件
 }

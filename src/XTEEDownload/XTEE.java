@@ -92,7 +92,7 @@ public class XTEE {
 		if (JsonURL.indexOf("serialnumber") != -1) {
 			// send email
 			if (fileCounter == 0) {
-				SNmapNotFound=SNmap;
+				SNmapNotFound = SNmap;
 			}
 			sendEmailToUser(buildSerialNumberList());
 			LOGGER.log(Level.INFO, "sendEmail done");
@@ -141,8 +141,9 @@ public class XTEE {
 		}
 		line4.deleteCharAt(line4.length() - 1);
 		line4.append("<br />");
-
-		body = line0 + line1 + Util.listMap(SNmapFound) + line3 + Util.listMap(SNmapNotFound);
+		body = line0 + line1 + line2.toString() + line3 + line4.toString();
+		// body = line0 + line1 + Util.listMap(SNmapFound) + line3 +
+		// Util.listMap(SNmapNotFound);
 		try {
 
 			Util.SendEMail(subject, toList, ccList, body, fromEmail);
@@ -173,9 +174,9 @@ public class XTEE {
 
 	private static int writeXTEEDataToFile(String jsonURL, String folder, List<String> myList, String inputFolder,
 			String fileType, String region, Date start) throws IOException, JSONException {
+		//HashMap<String, String> MQDMap = new HashMap<String, String>();
 		if (jsonURL.indexOf("serialnumber") != -1) {
 			getSerialNumberInfo(buildSerialNumberList(), myList);
-
 			Iterator<String> it = myList.iterator();
 			while (it.hasNext()) {
 				String x = it.next();
@@ -196,6 +197,10 @@ public class XTEE {
 				}
 
 			}
+
+		}
+		if (jsonURL.indexOf("serialnumber") == -1) {
+			myList = validationMQDSites(myList);
 
 		}
 		/*
@@ -310,47 +315,32 @@ public class XTEE {
 	 * @param myList
 	 */
 	public static void getSerialNumberInfo(String serialNumber, List<String> myList) {
-		//List<String> SNList = new ArrayList<String>(Arrays.asList(serialNumber.split(",")));
+		List<String> SNList = new ArrayList<String>(Arrays.asList(serialNumber.split(",")));
 
-		/*
-		 * for (String record : myList) { Iterator<String> it =
-		 * SNList.iterator(); while (it.hasNext()) { String sn = it.next(); if
-		 * (record.indexOf(sn) != -1) { String reference = SNmap.get(sn); if
-		 * (reference == null || reference == "") { SNmapFound.put(sn, ""); }
-		 * else { List<String> referenceSplit = new
-		 * ArrayList<String>(Arrays.asList(reference.split(","))); for (String
-		 * refer : referenceSplit) { if (record.indexOf(refer) != -1) {
-		 * Util.addValue(SNmapFound, sn, refer); } else {
-		 * Util.addValue(SNmapNotFound, sn, refer); } }
-		 * 
-		 * } it.remove(); } else { SNmapNotFound.put(sn, SNmap.get(sn)); } } }
-		 */
-		for (String sn : SNmap.keySet()) {
-			boolean ishaveSN = false;
-			for (String record : myList) {
+		for (String record : myList) {
+			Iterator<String> it = SNList.iterator();
+			while (it.hasNext()) {
+				String sn = it.next();
 				if (record.indexOf(sn) != -1) {
-					ishaveSN = true;
-					String reference = SNmap.get(sn);
-					if (reference == null || reference == "") {
-						SNmapFound.put(sn, "");
-					} else {
-						List<String> referenceSplit = new ArrayList<String>(Arrays.asList(reference.split(",")));
-						// boolean ishaverefer = false;
-						for (String refer : referenceSplit) {
-							if (record.indexOf(refer) != -1) {
-								// ishaverefer = true;
-								Util.addValue(SNmapFound, sn, refer);
-							}
+					it.remove();
 
-						}
-
-					}
 				}
 			}
-			
 		}
-		SNmapNotFound = Util.filterMap(SNmap, SNmapFound);
-		//SNNotFound = SNList;
+		SNNotFound = SNList;
+		/*
+		 * for (String sn : SNmap.keySet()) { boolean ishaveSN = false; for
+		 * (String record1 : myList) { if (record1.indexOf(sn) != -1) { ishaveSN
+		 * = true; String reference = SNmap.get(sn); if (reference == null ||
+		 * reference == "") { SNmapFound.put(sn, ""); } else { List<String>
+		 * referenceSplit = new
+		 * ArrayList<String>(Arrays.asList(reference.split(","))); // boolean
+		 * ishaverefer = false; for (String refer : referenceSplit) { if
+		 * (record1.indexOf(refer) != -1) { // ishaverefer = true;
+		 * Util.addValue(SNmapFound, sn, refer); } } } } }
+		 * 
+		 * } SNmapNotFound = Util.filterMap(SNmap, SNmapFound);
+		 */
 	}
 
 	public static int jsonCall(String jsonURL, String fileType, String folder, String inputFolder, String region)
@@ -463,7 +453,6 @@ public class XTEE {
 		String line = null;
 		StringBuilder sb = new StringBuilder("");
 		try {
-
 			File SerialNumberFile = new File(prop.getProperty("SerialNumberFile") + "serialNumberFile.txt");
 			if (!SerialNumberFile.exists() || SerialNumberFile.length() == 0) {
 				return null;
@@ -487,6 +476,46 @@ public class XTEE {
 			LOGGER.log(Level.ERROR, "Error Build SerialNumber: IOException" + e.getMessage());
 		}
 		return serialNumber;
+	}
+
+	public static List<String> validationMQDSites(List<String> myList) {
+		List<String> dataList = new ArrayList<>();
+		List<String> MQDList = new ArrayList<>();
+		BufferedReader MQDFileReader = null;
+		String line = null;
+		
+		try {
+
+			prop.getProperty("MQDFileLocation");
+			File MQDFile = new File(prop.getProperty("MQDFileLocation") + "MQDGuideEmailSites.txt");
+			MQDFileReader = new BufferedReader(new FileReader(MQDFile));
+			while ((line = MQDFileReader.readLine()) != null) {
+				MQDList.add(line);
+			}
+			MQDFileReader.close();
+			Iterator<String> it = myList.iterator();
+			while(it.hasNext()) {
+				String record=it.next();
+				int a=record.indexOf("site");
+				int b=record.indexOf("&", a+1);
+				String site="guide2_"+record.substring(a+5, b);
+				boolean YorN=true;
+				for(String s:MQDList){
+					if(s.startsWith(s)&&s.endsWith("N")){
+						YorN=false;
+					}
+				}
+				if (!YorN){
+					it.remove();
+				}
+			}
+			
+		dataList=myList;	
+		} catch (IOException e) {
+			LOGGER.log(Level.ERROR, "Error validationMQDSites" + e.getMessage());
+		}
+
+		return dataList;
 
 	}
 }
