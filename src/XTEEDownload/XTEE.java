@@ -75,7 +75,7 @@ public class XTEE {
 			}
 		}
 		LOGGER.log(Level.INFO, "fileCounter: " + fileCounter);
-		if (fileCounter == 3) {
+		if (fileCounter >= 1) {
 			// write out updated dateFile
 			try {
 				LOGGER.log(Level.INFO, "writing dateFile");
@@ -114,10 +114,11 @@ public class XTEE {
 		try {
 			prop.getProperty("MQDFileLocation");
 			File MQDFile = new File(prop.getProperty("MQDFileLocation") + "MQDGuideEmailSites.txt");
-			MQDFileWriter = new BufferedWriter(new FileWriter(MQDFile,true));
-			for(String s:set){
-				MQDFileWriter.write(s+",N/A,N/A,N/A,N/A,N"+"\n");	
-			};
+			MQDFileWriter = new BufferedWriter(new FileWriter(MQDFile, true));
+			for (String s : set) {
+				MQDFileWriter.write(s + ",N/A,N/A,N/A,N/A,N" + "\n");
+			}
+			MQDFileWriter.close();
 		} catch (IOException e) {
 			LOGGER.log(Level.ERROR, "Error updateSitefile" + e.getMessage());
 		}
@@ -138,21 +139,21 @@ public class XTEE {
 		String ccList = prop.getProperty("ccEmail");
 
 		String body = "";
-		String line1 = "Xtee accepts the new site:<br />";
+		int i = 1;
 		StringBuilder siteList = new StringBuilder();
-		set.forEach(s -> {
-			siteList.append(s);
-		});
-		siteList.deleteCharAt(siteList.length() - 1);
-		body = line1 + siteList.toString();
+		for (String s : set) {
+			siteList.append("<br />" + i++ + "." + s + "<br />");
+		}
+
+		body = siteList.toString() + "<br />";
 		try {
-			Util.SendEMail(subject, toList, ccList, body, fromEmail);
+			Util.SendEMailForSite(subject, toList, ccList, body, fromEmail);
 		} catch (ClassNotFoundException e) {
 			LOGGER.log(Level.ERROR, "ClassNotFoundException" + e.getMessage());
 		} catch (IOException e) {
 			LOGGER.log(Level.ERROR, "IOException" + e.getMessage());
 		} catch (Exception e) {
-			LOGGER.log(Level.ERROR, "error on sendEmail" + e.getMessage());
+			LOGGER.log(Level.ERROR, "error on send Email ForSite" + e.getMessage());
 		}
 	}
 

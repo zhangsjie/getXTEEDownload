@@ -39,25 +39,23 @@ import org.omg.CORBA.PUBLIC_MEMBER;
 
 public class Util {
 	private static String MESSAGE = "";
-	 private static String driverName="com.microsoft.sqlserver.jdbc.SQLServerDriver";  
-	//private static Properties prop;
-	private static Connection  getCoonection(String dbURL,String userName,String userPwd)  
-    {  
-        try  
-        {  
-         Class.forName(driverName);  
-         Connection conn=DriverManager.getConnection(dbURL,userName,userPwd);  
-         return conn;  
-        }  
+	private static String driverName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 
-        catch(Exception e)  
-        {  
-         e.printStackTrace();  
-         System.out.print("----------------连接失败");  
-        }   
-        return null;  
-    }  
-      
+	// private static Properties prop;
+	private static Connection getCoonection(String dbURL, String userName, String userPwd) {
+		try {
+			Class.forName(driverName);
+			Connection conn = DriverManager.getConnection(dbURL, userName, userPwd);
+			return conn;
+		}
+
+		catch (Exception e) {
+			e.printStackTrace();
+			System.out.print("----------------连接失败");
+		}
+		return null;
+	}
+
 	public static Boolean WriteToDB(String query) throws NamingException, SQLException {
 		InitialContext ic = new InitialContext();
 		DataSource ds = (DataSource) ic.lookup("java:comp/env/jdbc/IC_CLQR");
@@ -103,35 +101,71 @@ public class Util {
 			mex.printStackTrace();
 		}
 	}
-	public static ResultSet  executeQuery(String SQL,String dbURL,String userName,String userPwd)  
-    {    
-          try  
-  
-          {  
-  
-           Connection conn=getCoonection(dbURL,userName,userPwd);  
-           System.out.println("---------------连接数据库成功");    
-          // String SQL = "SELECT PlanTypeID, PlanTypeName FROM C_PlanType ";  
-           Statement stmt = conn.createStatement();  
-           ResultSet rs = stmt.executeQuery(SQL);  
-             /* while (rs.next())  
-              { 
-                 System.out.println(rs.getString("PlanTypeID") + ", " + rs.getString("PlanTypeName")); 
-              }*/  
-             // rs.close();  
-             // stmt.close();   
-              return  rs;  
-          }  
-          catch(Exception e)  
-          {  
-           e.printStackTrace();  
-           System.out.print("----------------查询失败");  
-          }  
-          return null;  
-    }  
+
+	public static void SendEMailForSite(String subject, String toList, String ccList, String body, String from)
+			throws IOException, SQLException, ClassNotFoundException {
+
+		// String from = "ffaapi.dev@hpe.com";
+		Properties properties = System.getProperties();
+		properties.setProperty("mail.smtp.host", "smtp3.hp.com");
+		properties.setProperty("mail.smtp.sendpartial", "true");
+		Session session = Session.getDefaultInstance(properties);
+
+		try {
+			MimeMessage message = new MimeMessage(session);
+			Multipart multipart = new MimeMultipart("alternative");
+
+			message.setFrom(new InternetAddress(from));
+			message.setRecipients(Message.RecipientType.TO, toList);
+			if (ccList != "" && ccList != null) {
+				message.setRecipients(Message.RecipientType.CC, ccList);
+			}
+			message.setSubject(subject);
+			MimeBodyPart bodyPart = new MimeBodyPart();
+			bodyPart.setContent(GetHTMLBodyForSite(body), "text/html");
+			multipart.addBodyPart(bodyPart);
+			message.setContent(multipart);
+
+			Transport.send(message);
+
+		} catch (MessagingException mex) {
+			System.out.println(mex.getCause());
+			mex.printStackTrace();
+		}
+	}
+
+	public static ResultSet executeQuery(String SQL, String dbURL, String userName, String userPwd) {
+		try
+
+		{
+
+			Connection conn = getCoonection(dbURL, userName, userPwd);
+			System.out.println("---------------连接数据库成功");
+			// String SQL = "SELECT PlanTypeID, PlanTypeName FROM C_PlanType ";
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(SQL);
+			/*
+			 * while (rs.next()) { System.out.println(rs.getString("PlanTypeID")
+			 * + ", " + rs.getString("PlanTypeName")); }
+			 */
+			// rs.close();
+			// stmt.close();
+			return rs;
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.print("----------------查询失败");
+		}
+		return null;
+	}
+
 	private static String GetHTMLBody(String message) {
 		return "<span style=\"font-family:Arial;font-size:10pt;\">Dear,<br><br>" + message
 				+ "<br><br><b>Thanks,<br>CLQR Group</b></span>";
+	}
+
+	private static String GetHTMLBodyForSite(String message) {
+		return "<span style=\"font-family:Arial;font-size:10pt;\">Event emails from new sites have been received in FFA. Please examine site(s) below and add to appropriate BMTs and notify IT as necessary.<br><br>"
+				+ message + "<br><br><b>Thanks,<br>*****DO NOT REPLY*****</b></span>";
 	}
 
 	public static String TruncateField(String field, int length) {
@@ -298,6 +332,6 @@ public class Util {
 		}
 		return map2;
 	}
-	
-	//按行读取文件
+
+	// 按行读取文件
 }
