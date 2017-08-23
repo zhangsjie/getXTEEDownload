@@ -4,6 +4,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.io.*;
@@ -33,6 +34,7 @@ public class XTEE {
 	private static HashMap<String, String> SNmap = new HashMap<String, String>();
 	private static HashMap<String, String> SNmapFound = new HashMap<String, String>();
 	private static HashMap<String, String> SNmapNotFound = new HashMap<String, String>();
+	private static HashSet<String> siteSet = new HashSet<String>();
 
 	public static void main(String[] args) {
 
@@ -85,6 +87,11 @@ public class XTEE {
 				if (f.delete()) {
 					(new File(prop.getProperty("dateFile") + ".tmp")).renameTo(f);
 				}
+				if (siteSet.size() > 0) {
+					sendEmailForSite(siteSet);
+					updateSitefile(siteSet);
+
+				}
 			} catch (Exception e) {
 				LOGGER.log(Level.ERROR, "error writing dateFile" + e.getMessage());
 			}
@@ -94,14 +101,63 @@ public class XTEE {
 			if (fileCounter == 0) {
 				SNmapNotFound = SNmap;
 			}
+
 			sendEmailToUser(buildSerialNumberList());
 			LOGGER.log(Level.INFO, "sendEmail done");
 		}
 		// System.exit(0);
 	}
 
+	private static void updateSitefile(HashSet<String> set) {
+		// TODO Auto-generated method stub
+		BufferedWriter MQDFileWriter = null;
+		try {
+			prop.getProperty("MQDFileLocation");
+			File MQDFile = new File(prop.getProperty("MQDFileLocation") + "MQDGuideEmailSites.txt");
+			MQDFileWriter = new BufferedWriter(new FileWriter(MQDFile,true));
+			for(String s:set){
+				MQDFileWriter.write(s+",N/A,N/A,N/A,N/A,N"+"\n");	
+			};
+		} catch (IOException e) {
+			LOGGER.log(Level.ERROR, "Error updateSitefile" + e.getMessage());
+		}
+	}
+
 	/**
-	 * send emil to user who use this jar
+	 * 
+	 * send email to ashok for the new site
+	 * 
+	 * @author zhangshe
+	 * @param set
+	 * 
+	 */
+	private static void sendEmailForSite(HashSet<String> set) {
+		String fromEmail = prop.getProperty("fromEmail");
+		String subject = "The new site of Xtee Api";
+		String toList = prop.getProperty("toEmail");
+		String ccList = prop.getProperty("ccEmail");
+
+		String body = "";
+		String line1 = "Xtee accepts the new site:<br />";
+		StringBuilder siteList = new StringBuilder();
+		set.forEach(s -> {
+			siteList.append(s);
+		});
+		siteList.deleteCharAt(siteList.length() - 1);
+		body = line1 + siteList.toString();
+		try {
+			Util.SendEMail(subject, toList, ccList, body, fromEmail);
+		} catch (ClassNotFoundException e) {
+			LOGGER.log(Level.ERROR, "ClassNotFoundException" + e.getMessage());
+		} catch (IOException e) {
+			LOGGER.log(Level.ERROR, "IOException" + e.getMessage());
+		} catch (Exception e) {
+			LOGGER.log(Level.ERROR, "error on sendEmail" + e.getMessage());
+		}
+	}
+
+	/**
+	 * send emil to user who use this jar for the serialNumber
 	 * 
 	 * @author zhangshe
 	 * @param serialNumber
@@ -277,16 +333,10 @@ public class XTEE {
 				}
 			}
 			if (jsonURL.indexOf("serialnumber") == -1) {
-				// FIXME
+
 				String site = "guide2_" + map.get("SITE") + ",";
-				List<String> MQDList = validationMQDSites();
-				boolean YorN = true;
-				for (String s : MQDList) {
-					if (s.startsWith(site) && s.endsWith("N")) {
-						YorN = false;
-					}
-				}
-				if (!YorN) {
+
+				if (!validationMQDSites(site)) {
 					continue;
 				}
 				// myList = validationMQDSites(myList);
@@ -494,15 +544,12 @@ public class XTEE {
 		return serialNumber;
 	}
 
-	public static List<String> validationMQDSites() {
-		// FIXME
+	public static List<String> buildMQDSites() {
 		List<String> dataList = new ArrayList<>();
 		List<String> MQDList = new ArrayList<>();
 		BufferedReader MQDFileReader = null;
 		String line = null;
-
 		try {
-
 			prop.getProperty("MQDFileLocation");
 			File MQDFile = new File(prop.getProperty("MQDFileLocation") + "MQDGuideEmailSites.txt");
 			MQDFileReader = new BufferedReader(new FileReader(MQDFile));
@@ -522,10 +569,26 @@ public class XTEE {
 			 * dataList = myList;
 			 */
 		} catch (IOException e) {
-			LOGGER.log(Level.ERROR, "Error validationMQDSites" + e.getMessage());
+			LOGGER.log(Level.ERROR, "Error buildMQDSites" + e.getMessage());
 		}
-
 		return MQDList;
 
 	}
+
+	public static boolean validationMQDSites(String site) {
+		List<String> MQDList = buildMQDSites();
+		boolean YorN = false;
+		for (String s : MQDList) {
+			if (s.startsWith(site)) {
+				if (s.endsWith("Y")) {
+					YorN = true;
+				}
+			} else {
+				siteSet.add(site);
+			}
+		}
+		return YorN;
+
+	}
+
 }

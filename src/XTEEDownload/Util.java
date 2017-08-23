@@ -39,8 +39,25 @@ import org.omg.CORBA.PUBLIC_MEMBER;
 
 public class Util {
 	private static String MESSAGE = "";
+	 private static String driverName="com.microsoft.sqlserver.jdbc.SQLServerDriver";  
 	//private static Properties prop;
+	private static Connection  getCoonection(String dbURL,String userName,String userPwd)  
+    {  
+        try  
+        {  
+         Class.forName(driverName);  
+         Connection conn=DriverManager.getConnection(dbURL,userName,userPwd);  
+         return conn;  
+        }  
 
+        catch(Exception e)  
+        {  
+         e.printStackTrace();  
+         System.out.print("----------------连接失败");  
+        }   
+        return null;  
+    }  
+      
 	public static Boolean WriteToDB(String query) throws NamingException, SQLException {
 		InitialContext ic = new InitialContext();
 		DataSource ds = (DataSource) ic.lookup("java:comp/env/jdbc/IC_CLQR");
@@ -86,7 +103,32 @@ public class Util {
 			mex.printStackTrace();
 		}
 	}
-
+	public static ResultSet  executeQuery(String SQL,String dbURL,String userName,String userPwd)  
+    {    
+          try  
+  
+          {  
+  
+           Connection conn=getCoonection(dbURL,userName,userPwd);  
+           System.out.println("---------------连接数据库成功");    
+          // String SQL = "SELECT PlanTypeID, PlanTypeName FROM C_PlanType ";  
+           Statement stmt = conn.createStatement();  
+           ResultSet rs = stmt.executeQuery(SQL);  
+             /* while (rs.next())  
+              { 
+                 System.out.println(rs.getString("PlanTypeID") + ", " + rs.getString("PlanTypeName")); 
+              }*/  
+             // rs.close();  
+             // stmt.close();   
+              return  rs;  
+          }  
+          catch(Exception e)  
+          {  
+           e.printStackTrace();  
+           System.out.print("----------------查询失败");  
+          }  
+          return null;  
+    }  
 	private static String GetHTMLBody(String message) {
 		return "<span style=\"font-family:Arial;font-size:10pt;\">Dear,<br><br>" + message
 				+ "<br><br><b>Thanks,<br>CLQR Group</b></span>";

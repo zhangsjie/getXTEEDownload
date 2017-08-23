@@ -7,8 +7,8 @@
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
 		</Console>
 		<!-- <File name="File" fileName="C:\\apiclient\\XTEE\\log.txt"> -->
-		<File name="File" fileName="./log.txt">
-	 <!-- <File name="File" fileName="G:\\KM2\\FCTYFA\\jobs\\log\\XteeApi_Load.txt"> -->
+		 <File name="File" fileName="./log.txt">
+	<!--  <File name="File" fileName="G:\\KM2\\FCTYFA\\jobs\\log\\XteeApi_Load.txt">  -->
 			<PatternLayout>
 				<pattern>%d %p %m%n</pattern>
 			</PatternLayout>
