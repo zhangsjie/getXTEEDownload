@@ -109,7 +109,6 @@ public class XTEE {
 	}
 
 	private static void updateSitefile(HashSet<String> set) {
-		// TODO Auto-generated method stub
 		BufferedWriter MQDFileWriter = null;
 		try {
 			prop.getProperty("MQDFileLocation");
@@ -134,7 +133,7 @@ public class XTEE {
 	 */
 	private static void sendEmailForSite(HashSet<String> set) {
 		String fromEmail = prop.getProperty("fromEmail");
-		String subject = "The new site of Xtee Api";
+		String subject = "ATTENTION: New FFA Site Records Received ***DO NOT REPLY***";
 		String toList = prop.getProperty("toEmail");
 		String ccList = prop.getProperty("ccEmail");
 
@@ -142,10 +141,10 @@ public class XTEE {
 		int i = 1;
 		StringBuilder siteList = new StringBuilder();
 		for (String s : set) {
-			siteList.append("<br />" + i++ + "." + s + "<br />");
+			siteList.append(i++ + "." + s + "<br />");
 		}
 
-		body = siteList.toString() + "<br />";
+		body = "<br />" + siteList.toString() + "<br />";
 		try {
 			Util.SendEMailForSite(subject, toList, ccList, body, fromEmail);
 		} catch (ClassNotFoundException e) {
@@ -585,7 +584,7 @@ public class XTEE {
 					YorN = true;
 				}
 			} else {
-				siteSet.add(site);
+				siteSet.add(site.substring(0,site.length()-1));
 			}
 		}
 		return YorN;
