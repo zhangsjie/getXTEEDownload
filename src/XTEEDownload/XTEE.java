@@ -4,7 +4,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.io.*;
@@ -32,8 +31,10 @@ public class XTEE {
 	private static Properties prop;
 	private static List<String> SNNotFound = new ArrayList<String>();
 	private static HashMap<String, String> SNmap = new HashMap<String, String>();
-	private static HashMap<String, String> SNmapFound = new HashMap<String, String>();
-	private static HashMap<String, String> SNmapNotFound = new HashMap<String, String>();
+	// private static HashMap<String, String> SNmapFound = new HashMap<String,
+	// String>();
+	// private static HashMap<String, String> SNmapNotFound = new
+	// HashMap<String, String>();
 	private static HashSet<String> siteSet = new HashSet<String>();
 
 	public static void main(String[] args) {
@@ -98,9 +99,9 @@ public class XTEE {
 		}
 		if (JsonURL.indexOf("serialnumber") != -1) {
 			// send email
-			if (fileCounter == 0) {
-				SNmapNotFound = SNmap;
-			}
+			/*
+			 * if (fileCounter == 0) { SNmapNotFound = SNmap; }
+			 */
 
 			sendEmailToUser(buildSerialNumberList());
 			LOGGER.log(Level.INFO, "sendEmail done");
@@ -112,7 +113,7 @@ public class XTEE {
 		BufferedWriter MQDFileWriter = null;
 		try {
 			prop.getProperty("MQDFileLocation");
-			File MQDFile = new File(prop.getProperty("MQDFileLocation") + "MQDGuideEmailSites.txt");
+			File MQDFile = new File(prop.getProperty("MQDFileLocation"));
 			MQDFileWriter = new BufferedWriter(new FileWriter(MQDFile, true));
 			for (String s : set) {
 				MQDFileWriter.write(s + ",N/A,N/A,N/A,N/A,N" + "\n");
@@ -233,40 +234,27 @@ public class XTEE {
 		// HashMap<String, String> MQDMap = new HashMap<String, String>();
 		if (jsonURL.indexOf("serialnumber") != -1) {
 			getSerialNumberInfo(buildSerialNumberList(), myList);
-			Iterator<String> it = myList.iterator();
-			while (it.hasNext()) {
-				String x = it.next();
-				for (String key : SNmap.keySet()) {
-					ArrayList<String> reference = new ArrayList<String>(Arrays.asList(SNmap.get(key).split(",")));
-					if (reference == null || reference.size() == 0) {
-						continue;
-					}
-					boolean ishaverefence = false;
-					for (String s : reference) {
-						if (x.indexOf(s) != -1) {
-							ishaverefence = true;
-						}
-					}
-					if (!ishaverefence) {
-						it.remove();
-					}
-				}
-
-			}
+			/*
+			 * Iterator<String> it = myList.iterator(); while (it.hasNext()) {
+			 * String x = it.next(); boolean ishaverefence = false; for (String
+			 * key : SNmap.keySet()) { ArrayList<String> reference = new
+			 * ArrayList<String>(Arrays.asList(SNmap.get(key).split(",")));
+			 * 
+			 * if (reference == null || reference.size() == 0) { continue; } for
+			 * (String s : reference) { LOGGER.log(Level.INFO, "s : " + s); if
+			 * (s.trim().isEmpty()) { continue; }
+			 * 
+			 * if (x.indexOf(s) > -1) { ishaverefence = true; } } }
+			 * LOGGER.log(Level.INFO, "ishaverefence : " + ishaverefence); if
+			 * (ishaverefence) { it.remove(); }
+			 * 
+			 * }
+			 */
 
 		}
-		/*
-		 * if (jsonURL.indexOf("serialnumber") == -1) { myList =
-		 * validationMQDSites(myList); }
-		 */
-		/*
-		 * if (region == "EMEA"){ LOGGER.log(Level.INFO,
-		 * "1111111111111111111111111111"); }
-		 */
+
 		String headers = jsonURL.split("fields=")[1];
 		String[] headerArray = headers.split(",");
-
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS", Locale.ENGLISH);
 
 		File dir = (new File(folder));
 		dir.mkdirs();
@@ -308,7 +296,7 @@ public class XTEE {
 				int a = split.indexOf(":");
 				int b = split.indexOf(":", a + 1);
 				String sub1 = split.substring(0, a).trim();
-				String sub2 = split.substring(a + 1, b).trim();
+				// String sub2 = split.substring(a + 1, b).trim();
 				String sub_3 = split.substring(b + 1, split.length()).trim();
 				String sub3 = sub_3.replaceAll(",", ".");
 
@@ -317,7 +305,6 @@ public class XTEE {
 						map.put(key, map.get(sub1) + sub3);
 					}
 				}
-
 			}
 
 			// 加入RECV_DATE和FILE_NAME
@@ -333,31 +320,38 @@ public class XTEE {
 				}
 			}
 			if (jsonURL.indexOf("serialnumber") == -1) {
-
-				String site = "guide2_" + map.get("SITE") + ",";
+				if (map.get("SITE").trim().length() == 0 || map.get("SITE") == null) {
+					continue;
+				}
+				String site = "guide2_" + map.get("SITE").trim() + ",";
 
 				if (!validationMQDSites(site)) {
 					continue;
 				}
-				// myList = validationMQDSites(myList);
+				for (String key : map.keySet()) {
+					bw.write(map.get(key) + ",");
+				}
+				bw.write("\n");
+			} else {
+				String reference = SNmap.get(map.get("MASTER_SERIAL_NUMBER"));
+				if (reference.trim().isEmpty() || reference.indexOf(map.get("REFERENCE").trim()) > -1) {
+					for (String k : map.keySet()) {
+						bw.write(map.get(k) + ",");
+					}
+					bw.write("\n");
+				}
 			}
-
-			// LOGGER.log(Level.INFO, "map:" + map.toString());
-			for (String key : map.keySet()) {
-				// LOGGER.log(Level.INFO, value);
-				bw.write(map.get(key) + ",");
-			}
-			bw.write("\n");
-
 		}
 		bw.close();
 		LOGGER.log(Level.INFO, pathName.toString());
 		File destinationFile = new File(pathName.toString());
 		try {
-			// LOGGER.log(Level.INFO, "File written Begin for: " + region);
 			file.renameTo(destinationFile);
-
-			LOGGER.log(Level.INFO, "File written successfully for: " + region);
+			if (jsonURL.indexOf("serialnumber") != -1) {
+				LOGGER.log(Level.INFO, "File written successfully for serialnumber!");
+			} else {
+				LOGGER.log(Level.INFO, "File written successfully for: " + region);
+			}
 
 			return 1;
 		} catch (Exception e) {
@@ -368,18 +362,6 @@ public class XTEE {
 		}
 	}
 
-	/**
-	 * 方法作用:记录serialnumber NotFound.
-	 * 
-	 * @author zhangshe
-	 * 
-	 * @param serialNumber
-	 * @param myList
-	 */
-	/**
-	 * @param serialNumber
-	 * @param myList
-	 */
 	public static void getSerialNumberInfo(String serialNumber, List<String> myList) {
 		List<String> SNList = new ArrayList<String>(Arrays.asList(serialNumber.split(",")));
 
@@ -394,19 +376,7 @@ public class XTEE {
 			}
 		}
 		SNNotFound = SNList;
-		/*
-		 * for (String sn : SNmap.keySet()) { boolean ishaveSN = false; for
-		 * (String record1 : myList) { if (record1.indexOf(sn) != -1) { ishaveSN
-		 * = true; String reference = SNmap.get(sn); if (reference == null ||
-		 * reference == "") { SNmapFound.put(sn, ""); } else { List<String>
-		 * referenceSplit = new
-		 * ArrayList<String>(Arrays.asList(reference.split(","))); // boolean
-		 * ishaverefer = false; for (String refer : referenceSplit) { if
-		 * (record1.indexOf(refer) != -1) { // ishaverefer = true;
-		 * Util.addValue(SNmapFound, sn, refer); } } } } }
-		 * 
-		 * } SNmapNotFound = Util.filterMap(SNmap, SNmapFound);
-		 */
+
 	}
 
 	public static int jsonCall(String jsonURL, String fileType, String folder, String inputFolder, String region)
@@ -545,13 +515,13 @@ public class XTEE {
 	}
 
 	public static List<String> buildMQDSites() {
-		List<String> dataList = new ArrayList<>();
+		// List<String> dataList = new ArrayList<>();
 		List<String> MQDList = new ArrayList<>();
 		BufferedReader MQDFileReader = null;
 		String line = null;
 		try {
 			prop.getProperty("MQDFileLocation");
-			File MQDFile = new File(prop.getProperty("MQDFileLocation") + "MQDGuideEmailSites.txt");
+			File MQDFile = new File(prop.getProperty("MQDFileLocation"));
 			MQDFileReader = new BufferedReader(new FileReader(MQDFile));
 			while ((line = MQDFileReader.readLine()) != null) {
 				MQDList.add(line);
@@ -578,17 +548,19 @@ public class XTEE {
 	public static boolean validationMQDSites(String site) {
 		List<String> MQDList = buildMQDSites();
 		boolean YorN = false;
+		boolean have = false;
 		for (String s : MQDList) {
 			if (s.startsWith(site)) {
+				have = true;
 				if (s.endsWith("Y")) {
 					YorN = true;
 				}
-			} else {
-				siteSet.add(site.substring(0,site.length()-1));
 			}
 		}
+		if (!have) {
+			siteSet.add(site.substring(0, site.length() - 1));
+		}
 		return YorN;
-
 	}
 
 }

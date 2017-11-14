@@ -1,0 +1,6 @@
+projectKey=xtee
+serverUrl=http://localhost:9000
+serverVersion=6.5.0.27846
+dashboardUrl=http://localhost:9000/dashboard/index/xtee
+ceTaskId=AV8Fr3om1gvcKf3--fNN
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AV8Fr3om1gvcKf3--fNN
