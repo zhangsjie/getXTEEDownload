@@ -9,9 +9,9 @@
 		</path>
 	<target name="jar" depends="compile">
 		<jar destfile="build/dist/getXteeApi.jar" basedir="build/classes">
-			<manifest>
+			<manifest file="MANIFEST.MF">
 				<attribute name="Main-Class" value="XTEEDownload.XTEE" />
-				<!-- <attribute name="Build-By" value="Snow"/> -->
+			
 			</manifest>
 		</jar>
 	</target>
