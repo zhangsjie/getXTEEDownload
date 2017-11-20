@@ -1,1 +1,37 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="jar" name="getXTEEDownload">
+
+	<path id="master-classpath">
+			<fileset dir="lib">
+				<include name="*.jar" />
+			</fileset>
+			<pathelement path="build" />
+		</path>
+	<target name="jar" depends="compile">
+		<jar destfile="build/dist/getXteeApi.jar" basedir="build/classes">
+			<manifest>
+				<attribute name="Main-Class" value="XTEEDownload.XTEE" />
+				<!-- <attribute name="Build-By" value="Snow"/> -->
+			</manifest>
+		</jar>
+	</target>
+	<target name="compile" depends="init1" description="Compile main source tree java files">
+		<javac destdir="build/classes" srcdir="src" encoding="UTF-8"/>
+		<classpath refid="master-classpath" />
+	</target>
+	<target name="init1">
+		<delete dir="build">
+		</delete>
+		<mkdir dir="build" />
+		<mkdir dir="build/src" />
+		<mkdir dir="build/classes" />
+		<mkdir dir="build/dist" />
+	</target>
+
+	<target name="cleanup">
+		<!-- 删除编译文件夹 -->
+		<delete dir="${build.dir}/classes" />
+	</target>
+
+
+</project>
