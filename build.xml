@@ -21,47 +21,57 @@
 			<include name="*.jar" />
 		</fileset>
 	</pathconvert>
-	
-	<!--组合各个路径，构成MANIFEST.MF文件中Class-Path所需的字符串-->  
-    <property name="libs" value="${lib} " />  
-  
-    <!--打印一下刚才构造好的字符串，看看是否符合要求-->  
-    <echo>libs   ${libs}</echo> 
-	<!-- 构造打包时Class-Path需要的路径 结束-->  
-	
-	<path id="master-classpath">
-		<fileset dir="lib">
-			<include name="*.jar" />
-		</fileset>
-		<pathelement path="build" />
-	</path>
+
+	<!--组合各个路径，构成MANIFEST.MF文件中Class-Path所需的字符串-->
+	<property name="libs" value="${lib} " />
+
+	<!--打印一下刚才构造好的字符串，看看是否符合要求-->
+	<echo>libs   ${libs}</echo>
+	<!-- 构造打包时Class-Path需要的路径 结束-->
+
+	<!--创建编译任务，名字是compile,depends指定了comiple任务依赖init任务-->
+	<target name="compile" depends="cleanup" description="comile target">
+		<!--javac，编译，对应java中的javac命令。  
+	 	        其中srcdir定义源文件路径 destdir定义编译后文件路径，  
+	 	        includeantruntime作用是指定编译任务是否包含ant的classpath,可有可无，不影响编译，  
+	 	        但不写可能会出现警告，为了眼不见心不烦，加上吧-->
+		<javac srcdir="${src}" destdir="${bin}" includeantruntime="true">
+			<!--给编译器指定编码，防止出现："警告： 编码 GBK 的不可映射字符"-->
+			<compilerarg line="-encoding UTF-8 " />
+			<!-- classpath 定义编译需要的claspath -->
+			<classpath>
+				<fileset dir="lib">
+					<include name="*.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+	</target>
+	<!--定义jarfilename，准备进行打包操作。其中ant.project.name是ant默认的一个变量，值为最上面定义的project的name  
+	    ${DSTAMP}为日期，格式为20111123；${TSTAMP}为时间，格式为2256，表示22点56分。  
+	        -->
+	<property name="jarfilename" value="getXTEEApi.jar" />
+	<!--打包开始，名字为jar，依赖任务为compile-->
 	<target name="jar" depends="compile">
-		<jar destfile="build/dist/getXteeApi.jar" basedir="build/"
-			includes="src/**">
-			<zipgroupfileset dir="lib/" includes="*.jar" />
-			<fileset dir="bin/"></fileset>
-			<manifest file="MANIFEST.MF">
+		<!--jar操作，jarfile指定jar包存放路径，basedir为编译后的class的目录-->
+		<jar jarfile="${jarfilename}" basedir="${bin}">
+			<!--就是<zipgroupfileset>这个标签可以把我们指定的jar一起包到我们的目的Jar中了，这样当我们运行main.jar的时候就不会出现第三方类找不到的错误了。-->
+			<zipgroupfileset dir="lib" includes="*.jar" /> 		
+			<!--为jar包指定manifest，当然，如果jar包不需要打成runnable的形式，manifest可以不要-->
+			<manifest>
+				<!--指定main-class-->
 				<attribute name="Main-Class" value="XTEEDownload.XTEE" />
+				<!--指定Class-Path-->
+				<attribute name="Class-Path" value="${lib}" />
 			</manifest>
 		</jar>
 	</target>
-	<target name="compile" depends="init1"
-		description="Compile main source tree java files">
-		<javac destdir="build/classes" srcdir="src" encoding="UTF-8" />
-		<classpath refid="master-classpath" />
-	</target>
-	<target name="init1">
-		<delete dir="build">
-		</delete>
-		<mkdir dir="build" />
-		<mkdir dir="build/src" />
-		<mkdir dir="build/classes" />
-		<mkdir dir="build/dist" />
-	</target>
+
+
 
 	<target name="cleanup">
 		<!-- 删除编译文件夹 -->
-		<delete dir="${build.dir}/classes" />
+		<!-- 可以以递归的方式删除目录 -->
+		<delete dir="${bin}/*" />
 	</target>
 
 
